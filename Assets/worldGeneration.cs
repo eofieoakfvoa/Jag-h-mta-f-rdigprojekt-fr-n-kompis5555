@@ -41,7 +41,7 @@ public class worldGeneration : MonoBehaviour
     Grid mapgrid;
     
     int chunksize = 32;
-    Dictionary<System.Numerics.Vector3, Tile> tileDictionary = new();
+    Dictionary<UnityEngine.Vector3, GameObject> chunkDictionary = new();
     
     void Start()
     {
@@ -60,6 +60,30 @@ public class worldGeneration : MonoBehaviour
     {
         seed = UnityEngine.Random.Range(0, 100);
     }
+
+
+    //------------------------------------------------------------//
+    //-------------------------GENERATION-------------------------//
+    //------------------------------------------------------------//
+    public void GetChunk(UnityEngine.Vector3 Position)
+    {
+        if(!chunkDictionary.ContainsKey(Position))
+        {
+            GenerateChunks(Position);
+        }
+    }
+
+    public void GenerateWorld()
+    {
+        for (int x = 0; x < MaxX; x += chunksize)
+        {
+            for (int y = 0; y < MaxY; y += chunksize)
+            {
+                Vector3Int position = new(x,y,0);
+                GetChunk(position);
+            }
+        }
+    }
     public void GenerateChunks(UnityEngine.Vector3 pos)
     {
         //kolla ifall tiledictionary kordinaterna är tom eller inte sen skapa
@@ -69,7 +93,7 @@ public class worldGeneration : MonoBehaviour
         chunkMap.AddComponent<TilemapRenderer>();
         chunkMap.transform.parent = mapgrid.transform;
         GetTileData(chunkMap.GetComponent<Tilemap>(), pos);
-        tileDebug(chunkMap.GetComponent<Tilemap>());
+        chunkDictionary.Add(pos, chunkMap);
     }
     public void GetTileData(Tilemap map, UnityEngine.Vector3 pos)
     {
@@ -77,42 +101,15 @@ public class worldGeneration : MonoBehaviour
         {
             for (int y = (int)pos.y; y <= pos.y + chunksize; y ++)
             {
-                Vector3Int position = new((int)pos.x + x, (int)pos.y + y,0);
+                Vector3Int position = new(x, y, 0);
                 Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
                 map.SetTile(position, getTile);
             }
         }
     }
-    public void GenerateWorld()
-    {
-        for (int x = 0; x < MaxX; x += chunksize)
-        {
-            for (int y = 0; y < MaxY; y += chunksize)
-            {
-                Vector3Int position = new(x,y,0);
-                Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
-                GenerateChunks(position);
-                //tilemap.SetTile(position, getTile);
-            }
-        }
-    }
-    public void tileDebug(Tilemap map)
-    {
-        BoundsInt bounds = map.cellBounds;
-        TileBase[] allTiles = map.GetTilesBlock(bounds);
 
-        for (int x = 0; x < bounds.size.x; x++) {
-            for (int y = 0; y < bounds.size.y; y++) {
-                TileBase tile = allTiles[x + y * bounds.size.x];
-                if (tile != null) {
-                    Debug.Log("x:" + x + " y:" + y + " tile:" + tile.name);
-                } else {
-                    Debug.Log("x:" + x + " y:" + y + " tile: (null)");
-                }
-            }
-        }     
 
-    }
+    //----
     public Tile PerlinNoise(int x, int y, int Octaves, int amplitudeChange, int frequencyChange, int amplitude = 1, int frequency = 1)
     {       
         float maxvalue = 0;

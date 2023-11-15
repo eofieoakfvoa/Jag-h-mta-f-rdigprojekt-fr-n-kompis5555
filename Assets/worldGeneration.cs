@@ -29,19 +29,21 @@ public class worldGeneration : MonoBehaviour
     int Frequencychangr;
     [SerializeField]
     int Octave;
-    [SerializeField]
-    int MaxX;
-    [SerializeField]
-    int MaxY;
+    
     [SerializeField]
     float floatCap;
     [SerializeField]
     GameObject Player;
     [SerializeField]
     Grid mapgrid;
+    [SerializeField]
+    int RenderDistance = 32;
     
     int chunksize = 32;
+    Vector2Int playerChunk;
+
     Dictionary<UnityEngine.Vector3, GameObject> chunkDictionary = new();
+    List<UnityEngine.Vector3> currentlyLoadedChunks = new();
     
     void Start()
     {
@@ -51,10 +53,9 @@ public class worldGeneration : MonoBehaviour
     }  
     void Update()
     {
-        if (Input.GetButtonDown("Fire1"))
-        {
-            GenerateWorld();
-        }
+
+        playerChunk = new((int)Player.transform.position.x / chunksize * chunksize, (int)Player.transform.position.y / chunksize * chunksize);
+        GenerateWorld();
     }
     public void GetSeed()
     {
@@ -70,28 +71,55 @@ public class worldGeneration : MonoBehaviour
         if(!chunkDictionary.ContainsKey(Position))
         {
             GenerateChunks(Position);
+        }   
+        else
+        {
+            GameObject tile = chunkDictionary[Position];
+            tile.transform.parent = mapgrid.transform;
         }
     }
 
     public void GenerateWorld()
     {
-        for (int x = 0; x < MaxX; x += chunksize)
+        List<UnityEngine.Vector3> chunkUnloadList = new();
+        print(currentlyLoadedChunks.Count);
+        foreach (UnityEngine.Vector3 chunkCords in currentlyLoadedChunks)
         {
-            for (int y = 0; y < MaxY; y += chunksize)
+            chunkUnloadList.Add(chunkCords);
+        }
+
+        for (int x = playerChunk.x - RenderDistance; x <= playerChunk.x + RenderDistance; x += chunksize)
+        {
+            for (int y = playerChunk.y - RenderDistance; y < playerChunk.y + RenderDistance; y += chunksize)
             {
                 Vector3Int position = new(x,y,0);
                 GetChunk(position);
+                chunkUnloadList.Remove(position);
+                if (!currentlyLoadedChunks.Contains(position))
+                {
+                    currentlyLoadedChunks.Add(position);
+                }
             }
         }
+        foreach (UnityEngine.Vector3 Remove in chunkUnloadList)
+        {
+            GameObject chunk = chunkDictionary[Remove]; 
+            Destroy(chunk);
+        }
+        chunkUnloadList.Clear();
     }
     public void GenerateChunks(UnityEngine.Vector3 pos)
     {
         //kolla ifall tiledictionary kordinaterna är tom eller inte sen skapa
-        GameObject chunkMap = new GameObject("Tilemap");
-        chunkMap.name = pos.x.ToString() + ", "+ pos.y.ToString() + " Chunk";
+        GameObject chunkMap = new()
+        {
+            name = pos.x.ToString() + ", " + pos.y.ToString() + " Chunk",
+        };
+
         chunkMap.AddComponent<Tilemap>();
         chunkMap.AddComponent<TilemapRenderer>();
         chunkMap.transform.parent = mapgrid.transform;
+
         GetTileData(chunkMap.GetComponent<Tilemap>(), pos);
         chunkDictionary.Add(pos, chunkMap);
     }
@@ -101,9 +129,11 @@ public class worldGeneration : MonoBehaviour
         {
             for (int y = (int)pos.y; y <= pos.y + chunksize; y ++)
             {
+                
                 Vector3Int position = new(x, y, 0);
                 Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
                 map.SetTile(position, getTile);
+
             }
         }
     }

@@ -75,7 +75,7 @@ public class worldGeneration : MonoBehaviour
         else
         {
             GameObject tile = chunkDictionary[Position];
-            tile.transform.parent = mapgrid.transform;
+            tile.SetActive(true);
         }
     }
 
@@ -104,7 +104,7 @@ public class worldGeneration : MonoBehaviour
         foreach (UnityEngine.Vector3 Remove in chunkUnloadList)
         {
             GameObject chunk = chunkDictionary[Remove]; 
-            Destroy(chunk);
+            chunk.SetActive(false);
         }
         chunkUnloadList.Clear();
     }

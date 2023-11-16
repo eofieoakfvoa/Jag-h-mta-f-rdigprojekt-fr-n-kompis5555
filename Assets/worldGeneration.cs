@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using TreeEditor;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.VisualScripting;
@@ -10,38 +11,83 @@ using UnityEngine.Tilemaps;
 public class worldGeneration : MonoBehaviour
 {
     [SerializeField]
-    Tilemap tilemap;
-    [SerializeField]
-    Tile temptile;
-    [SerializeField]
-    Tile tempwaterTile;
     float seed;
 
+    [Header("HeightControl")]
+    #region 
     [SerializeField]
     int Amplitude;
 
     [SerializeField]
-    int Frequency;
-    [SerializeField]
     int Amplitudechangr;
-
-    [SerializeField]
-    int Frequencychangr;
     [SerializeField]
     int Octave;
     
     [SerializeField]
     float floatCap;
+    #endregion
+
+
+
+    [Header("TemperatureControl")]
+    #region 
+    [SerializeField]
+    int tAmplitude;
+
+    [SerializeField]
+    int tAmplitudechangr;
+    [SerializeField]
+    int tOctave;
+    #endregion
+
+
+
+    [Header("HumidityControl")]
+    #region 
+    [SerializeField]
+    int hAmplitude;
+
+    [SerializeField]
+    int hAmplitudechangr;
+    [SerializeField]
+    int hOctave;
+    #endregion
+
+
+
+    [Header("ErosionControl")]
+    #region 
+    [SerializeField]
+    int eAmplitude;
+
+    [SerializeField]
+    int eAmplitudechangr;
+    [SerializeField]
+    int eOctave;
+    #endregion
+    
+
+    
+    [Header("Extra")]
+    #region 
     [SerializeField]
     GameObject Player;
     [SerializeField]
     Grid mapgrid;
     [SerializeField]
     int RenderDistance = 32;
+    [SerializeField]
+    Tilemap tilemap;
+    [SerializeField]
+    Tile temptile;
+    [SerializeField]
+    Tile tempwaterTile;
+    #endregion
+    
+    
     
     int chunksize = 32;
     Vector2Int playerChunk;
-
     Dictionary<UnityEngine.Vector3, GameObject> chunkDictionary = new();
     List<UnityEngine.Vector3> currentlyLoadedChunks = new();
     
@@ -131,8 +177,8 @@ public class worldGeneration : MonoBehaviour
             {
                 
                 Vector3Int position = new(x, y, 0);
-                Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
-                map.SetTile(position, getTile);
+                //Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
+                //map.SetTile(position, getTile);
 
             }
         }
@@ -140,25 +186,28 @@ public class worldGeneration : MonoBehaviour
 
 
     //----
-    public Tile PerlinNoise(int x, int y, int Octaves, int amplitudeChange, int frequencyChange, int amplitude = 1, int frequency = 1)
+    public void TileInformation(float x, float y)
+    {
+      float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Amplitude);
+      float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eAmplitude);
+      float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tAmplitude);
+      float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hAmplitude);  
+    }
+    public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, int amplitude = 1)
     {       
         float maxvalue = 0;
         float Noise = 0;
+        x += 10000000;
+        y += 10000000;
         for (int i = 0; i < Octaves; i++)
         {
-            Noise += Mathf.PerlinNoise(x/seed * frequency, y/seed * frequency) * amplitude;
+            Noise += Mathf.PerlinNoise(x / seed, y / seed) * amplitude;
             maxvalue += amplitude;
             amplitude *= amplitudeChange;
-            frequency *= frequencyChange;
             
         }
         Noise /= maxvalue;
-        if (Noise > floatCap)
-        {
-            //Gör det till air, sen har jag lager under mappen där det är vatten vatten är lite större en camera size sen följer vattnet med<
-            return tempwaterTile;   
-        }
-        return temptile;
+        return Noise;
     }
     public void ReplaceTile()
     {

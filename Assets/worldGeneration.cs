@@ -5,6 +5,7 @@ using TreeEditor;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -12,6 +13,17 @@ public class worldGeneration : MonoBehaviour
 {
     [SerializeField]
     float seed;
+
+    public enum tempEnum
+    {
+        Height,
+        Temperature,
+        Humidity,
+        Erosion,
+
+    }
+    [SerializeField]
+    private tempEnum tempenum = tempEnum.Height;
 
     [Header("HeightControl")]
     #region 
@@ -105,7 +117,8 @@ public class worldGeneration : MonoBehaviour
     }
     public void GetSeed()
     {
-        seed = UnityEngine.Random.Range(0, 100);
+        //seed = UnityEngine.Random.Range(0, 100);
+        seed = 800;
     }
 
 
@@ -128,7 +141,6 @@ public class worldGeneration : MonoBehaviour
     public void GenerateWorld()
     {
         List<UnityEngine.Vector3> chunkUnloadList = new();
-        print(currentlyLoadedChunks.Count);
         foreach (UnityEngine.Vector3 chunkCords in currentlyLoadedChunks)
         {
             chunkUnloadList.Add(chunkCords);
@@ -179,19 +191,42 @@ public class worldGeneration : MonoBehaviour
                 Vector3Int position = new(x, y, 0);
                 //Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
                 //map.SetTile(position, getTile);
-
+                map.SetTile(position, temptile);
+                map.SetTileFlags(position, TileFlags.None);
+                float tempColor = TileInformation(x,y);
+                map.SetColor(position, new Color(tempColor,tempColor,tempColor,1));
+                
             }
         }
     }
 
 
     //----
-    public void TileInformation(float x, float y)
+    public float TileInformation(float x, float y)
     {
-      float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Amplitude);
-      float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eAmplitude);
-      float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tAmplitude);
-      float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hAmplitude);  
+    
+        float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Amplitude);
+        float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eAmplitude);
+        float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tAmplitude);
+        float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hAmplitude);
+        if (tempenum == tempEnum.Height)
+        {
+            print(Height);
+            return Height;
+        }
+        else if (tempenum == tempEnum.Erosion)
+        {
+            return Erosion;
+        }
+        else if (tempenum == tempEnum.Humidity)
+        {
+            return Humidity;
+        }
+        else if (tempenum == tempEnum.Temperature)
+        {
+            return Temperature;
+        }
+        return 0;
     }
     public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, int amplitude = 1)
     {       

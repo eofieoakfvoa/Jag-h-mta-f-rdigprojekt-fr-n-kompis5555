@@ -37,6 +37,10 @@ public class worldGeneration : MonoBehaviour
     
     [SerializeField]
     float floatCap;
+    [SerializeField]
+    float Frequency;
+    [SerializeField]
+    float Frequencychangi;
     #endregion
 
 
@@ -50,6 +54,10 @@ public class worldGeneration : MonoBehaviour
     int tAmplitudechangr;
     [SerializeField]
     int tOctave;
+    [SerializeField]
+    float tFrequency;
+    [SerializeField]
+    float tFrequencychangi;
     #endregion
 
 
@@ -63,6 +71,10 @@ public class worldGeneration : MonoBehaviour
     int hAmplitudechangr;
     [SerializeField]
     int hOctave;
+    [SerializeField]
+    float hFrequency;
+    [SerializeField]
+    float hFrequencychangi;
     #endregion
 
 
@@ -76,6 +88,10 @@ public class worldGeneration : MonoBehaviour
     int eAmplitudechangr;
     [SerializeField]
     int eOctave;
+    [SerializeField]
+    float eFrequency;
+    [SerializeField]
+    float eFrequencychangi;
     #endregion
     
 
@@ -111,7 +127,17 @@ public class worldGeneration : MonoBehaviour
     }  
     void Update()
     {
+        if(Input.GetButton("Jump"))
+        {
+            chunkDictionary.Clear();
+            currentlyLoadedChunks.Clear();
+            foreach(Transform child in mapgrid.transform)
+            {
+                Destroy(child.gameObject);
+            }
 
+            
+        }
         playerChunk = new((int)Player.transform.position.x / chunksize * chunksize, (int)Player.transform.position.y / chunksize * chunksize);
         GenerateWorld();
     }
@@ -194,7 +220,22 @@ public class worldGeneration : MonoBehaviour
                 map.SetTile(position, temptile);
                 map.SetTileFlags(position, TileFlags.None);
                 float tempColor = TileInformation(x,y);
-                map.SetColor(position, new Color(tempColor,tempColor,tempColor,1));
+                if (tempColor <= 0.2)
+                {
+                    map.SetColor(position, Color.black);
+                }
+                else if (tempColor <= 0.4)
+                {
+                    map.SetColor(position, Color.blue);
+                }
+                else if (tempColor <= 0.6)
+                {
+                    map.SetColor(position, Color.yellow);
+                }
+                else if (tempColor <= 0.8)
+                {
+                    map.SetColor(position, Color.red);
+                }
                 
             }
         }
@@ -205,30 +246,33 @@ public class worldGeneration : MonoBehaviour
     public float TileInformation(float x, float y)
     {
     
-        float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Amplitude);
-        float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eAmplitude);
-        float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tAmplitude);
-        float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hAmplitude);
+        float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Frequency, Frequencychangi, Amplitude);
+        float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eFrequency, eFrequencychangi, eAmplitude);
+        float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tFrequency, tFrequencychangi, tAmplitude);
+        float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hFrequency, hFrequencychangi, hAmplitude);
         if (tempenum == tempEnum.Height)
         {
-            print(Height);
+            print("1");
             return Height;
         }
         else if (tempenum == tempEnum.Erosion)
         {
+            print("2");
             return Erosion;
         }
         else if (tempenum == tempEnum.Humidity)
         {
+            print("3");
             return Humidity;
         }
         else if (tempenum == tempEnum.Temperature)
         {
+            print("4");
             return Temperature;
         }
         return 0;
     }
-    public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, int amplitude = 1)
+    public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, float Frequency, float Frequencychangr, int amplitude = 1 )
     {       
         float maxvalue = 0;
         float Noise = 0;
@@ -236,10 +280,10 @@ public class worldGeneration : MonoBehaviour
         y += 10000000;
         for (int i = 0; i < Octaves; i++)
         {
-            Noise += Mathf.PerlinNoise(x / seed, y / seed) * amplitude;
+            Noise += Mathf.PerlinNoise(x / seed * Frequency, y / seed * Frequency) * amplitude;
             maxvalue += amplitude;
             amplitude *= amplitudeChange;
-            
+            Frequency *= Frequencychangr;
         }
         Noise /= maxvalue;
         return Noise;

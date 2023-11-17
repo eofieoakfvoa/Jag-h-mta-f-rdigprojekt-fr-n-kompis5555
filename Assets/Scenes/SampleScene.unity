@@ -288,18 +288,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de3f04b0451ce0443bf6aaeee3c4a50e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilemap: {fileID: 0}
-  temptile: {fileID: 11400000, guid: 8238dbbcc89d7894899f058a81646824, type: 2}
-  tempwaterTile: {fileID: 11400000, guid: 12324cf4dc564384998af06ab295958c, type: 2}
+  seed: 0
+  tempenum: 2
   Amplitude: 1
-  Frequency: 1
   Amplitudechangr: 2
-  Frequencychangr: 2
-  Octave: 2
+  Octave: 3
   floatCap: 0.6
+  Frequency: 5
+  Frequencychangi: 12
+  tAmplitude: 2
+  tAmplitudechangr: 1
+  tOctave: 3
+  tFrequency: 2
+  tFrequencychangi: 2
+  hAmplitude: 400
+  hAmplitudechangr: 2
+  hOctave: 2
+  hFrequency: 2
+  hFrequencychangi: 3
+  eAmplitude: 600
+  eAmplitudechangr: 500
+  eOctave: 1
+  eFrequency: 3
+  eFrequencychangi: 2
   Player: {fileID: 1278933760}
   mapgrid: {fileID: 638371684}
   RenderDistance: 32
+  tilemap: {fileID: 0}
+  temptile: {fileID: 11400000, guid: 8238dbbcc89d7894899f058a81646824, type: 2}
+  tempwaterTile: {fileID: 11400000, guid: 12324cf4dc564384998af06ab295958c, type: 2}
 --- !u!4 &1229199790
 Transform:
   m_ObjectHideFlags: 0

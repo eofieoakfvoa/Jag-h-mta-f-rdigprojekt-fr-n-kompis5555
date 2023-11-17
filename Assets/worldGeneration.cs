@@ -22,6 +22,26 @@ public class worldGeneration : MonoBehaviour
         Erosion,
 
     }
+
+    public enum Biome
+    {
+        Fields = 1,
+        SnowyFields,
+        Swamp,
+        Desert,
+        Savannah,
+        Tundra,
+        Mountains,
+        TropicalMountains,
+        Ocean,
+        DrySteppe,
+        MonsoonForest,
+        Taiga,
+        Chaparral,
+        AlphineTundra,
+
+
+    }
     [SerializeField]
     private tempEnum tempenum = tempEnum.Height;
 
@@ -34,7 +54,7 @@ public class worldGeneration : MonoBehaviour
     int Amplitudechangr;
     [SerializeField]
     int Octave;
-    
+
     [SerializeField]
     float floatCap;
     [SerializeField]
@@ -93,9 +113,9 @@ public class worldGeneration : MonoBehaviour
     [SerializeField]
     float eFrequencychangi;
     #endregion
-    
 
-    
+
+
     [Header("Extra")]
     #region 
     [SerializeField]
@@ -111,35 +131,35 @@ public class worldGeneration : MonoBehaviour
     [SerializeField]
     Tile tempwaterTile;
     #endregion
-    
-    
-    
+
+
+
     int chunksize = 32;
     Vector2Int playerChunk;
     Dictionary<UnityEngine.Vector3, GameObject> chunkDictionary = new();
     List<UnityEngine.Vector3> currentlyLoadedChunks = new();
-    
+
     void Start()
     {
         GetSeed();
-        GenerateWorld();
-        
-    }  
+        StartCoroutine(GenerateWorld());
+
+    }
     void Update()
     {
-        if(Input.GetButton("Jump"))
+        if (Input.GetButton("Jump"))
         {
             chunkDictionary.Clear();
             currentlyLoadedChunks.Clear();
-            foreach(Transform child in mapgrid.transform)
+            foreach (Transform child in mapgrid.transform)
             {
                 Destroy(child.gameObject);
             }
 
-            
+
         }
         playerChunk = new((int)Player.transform.position.x / chunksize * chunksize, (int)Player.transform.position.y / chunksize * chunksize);
-        GenerateWorld();
+        StartCoroutine(GenerateWorld());
     }
     public void GetSeed()
     {
@@ -153,10 +173,10 @@ public class worldGeneration : MonoBehaviour
     //------------------------------------------------------------//
     public void GetChunk(UnityEngine.Vector3 Position)
     {
-        if(!chunkDictionary.ContainsKey(Position))
+        if (!chunkDictionary.ContainsKey(Position))
         {
             GenerateChunks(Position);
-        }   
+        }
         else
         {
             GameObject tile = chunkDictionary[Position];
@@ -164,7 +184,7 @@ public class worldGeneration : MonoBehaviour
         }
     }
 
-    public void GenerateWorld()
+    IEnumerator GenerateWorld()
     {
         List<UnityEngine.Vector3> chunkUnloadList = new();
         foreach (UnityEngine.Vector3 chunkCords in currentlyLoadedChunks)
@@ -176,7 +196,7 @@ public class worldGeneration : MonoBehaviour
         {
             for (int y = playerChunk.y - RenderDistance; y < playerChunk.y + RenderDistance; y += chunksize)
             {
-                Vector3Int position = new(x,y,0);
+                Vector3Int position = new(x, y, 0);
                 GetChunk(position);
                 chunkUnloadList.Remove(position);
                 if (!currentlyLoadedChunks.Contains(position))
@@ -187,10 +207,11 @@ public class worldGeneration : MonoBehaviour
         }
         foreach (UnityEngine.Vector3 Remove in chunkUnloadList)
         {
-            GameObject chunk = chunkDictionary[Remove]; 
+            GameObject chunk = chunkDictionary[Remove];
             chunk.SetActive(false);
         }
         chunkUnloadList.Clear();
+        yield return null;
     }
     public void GenerateChunks(UnityEngine.Vector3 pos)
     {
@@ -204,22 +225,22 @@ public class worldGeneration : MonoBehaviour
         chunkMap.AddComponent<TilemapRenderer>();
         chunkMap.transform.parent = mapgrid.transform;
 
-        GetTileData(chunkMap.GetComponent<Tilemap>(), pos);
+        StartCoroutine(GetTileData(chunkMap.GetComponent<Tilemap>(), pos));
         chunkDictionary.Add(pos, chunkMap);
     }
-    public void GetTileData(Tilemap map, UnityEngine.Vector3 pos)
+    IEnumerator GetTileData(Tilemap map, UnityEngine.Vector3 pos)
     {
-        for (int x = (int)pos.x; x <= pos.x + chunksize; x ++)
+        for (int x = (int)pos.x; x <= pos.x + chunksize; x++)
         {
-            for (int y = (int)pos.y; y <= pos.y + chunksize; y ++)
+            for (int y = (int)pos.y; y <= pos.y + chunksize; y++)
             {
-                
+
                 Vector3Int position = new(x, y, 0);
                 //Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
                 //map.SetTile(position, getTile);
                 map.SetTile(position, temptile);
                 map.SetTileFlags(position, TileFlags.None);
-                float tempColor = TileInformation(x,y);
+                float tempColor = TileInformation(x, y);
                 if (tempColor <= 0.2)
                 {
                     map.SetColor(position, Color.black);
@@ -236,7 +257,8 @@ public class worldGeneration : MonoBehaviour
                 {
                     map.SetColor(position, Color.red);
                 }
-                
+                yield return null;
+
             }
         }
     }
@@ -245,7 +267,7 @@ public class worldGeneration : MonoBehaviour
     //----
     public float TileInformation(float x, float y)
     {
-    
+
         float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Frequency, Frequencychangi, Amplitude);
         float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eFrequency, eFrequencychangi, eAmplitude);
         float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tFrequency, tFrequencychangi, tAmplitude);
@@ -272,8 +294,8 @@ public class worldGeneration : MonoBehaviour
         }
         return 0;
     }
-    public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, float Frequency, float Frequencychangr, int amplitude = 1 )
-    {       
+    public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, float Frequency, float Frequencychangr, int amplitude = 1)
+    {
         float maxvalue = 0;
         float Noise = 0;
         x += 10000000;
@@ -287,6 +309,95 @@ public class worldGeneration : MonoBehaviour
         }
         Noise /= maxvalue;
         return Noise;
+    }
+    private void GetBiome(float Height, float Erosion, float Humidity, float Temperature)
+    {
+        float combinedHeight = Height * Erosion;
+        int HeightType;
+        int biome;
+        if (combinedHeight > 0.8)
+        {
+            HeightType = 3;
+        }
+        else if (combinedHeight < 0.2)
+        {
+            HeightType = 1;
+        }
+        else
+        {
+            HeightType = 2;
+        }
+
+        if (HeightType == 2)
+        {
+            if (Humidity > 6)
+            {
+                if (Temperature < 3)
+                {
+                    biome = (int)Biome.SnowyFields;
+                }
+                else if (Temperature > 8)
+                {
+                    biome = (int)Biome.Swamp;
+                }
+                else
+                {
+                    biome = (int)Biome.Fields;
+                }
+            }
+            if (Humidity < 6)
+            {
+
+            }
+        }
+        else if (HeightType == 1)
+        {
+            if (Humidity > 5)
+            {
+                biome = (int)Biome.Ocean;
+            }
+            else
+            {
+                if (Temperature > 5)
+                {
+                    //Choose random
+                    biome = (int)Biome.Desert;
+                    biome = (int)Biome.Savannah;
+                    biome = (int)Biome.DrySteppe;
+                }
+            }
+        }
+        else if (HeightType == 3)
+        {
+            if (Humidity < 4)
+            {
+                if (Temperature > 3)
+                {
+                    biome = (int)Biome.Chaparral;
+                }
+                else
+                {
+                    biome = (int)Biome.AlphineTundra;
+                }
+
+            }
+            else if (Humidity > 8)
+            {
+                if (Temperature > 2)
+                {
+
+                }
+                else if (Temperature > 7)
+                {
+
+                }
+                else
+                {
+                    biome = (int)Biome.TropicalMountains;
+                }
+            }
+        }
+
     }
     public void ReplaceTile()
     {

@@ -130,6 +130,8 @@ public class worldGeneration : MonoBehaviour
     Tile temptile;
     [SerializeField]
     Tile tempwaterTile;
+    [SerializeField]
+    Tile realTempWaterTile;
     #endregion
 
 
@@ -238,25 +240,24 @@ public class worldGeneration : MonoBehaviour
                 Vector3Int position = new(x, y, 0);
                 //Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
                 //map.SetTile(position, getTile);
-                map.SetTile(position, temptile);
+                (float Height, float Erosion, float Temperature, float Humidity) = TileInformation(x, y);
+                float combinedHeight = Height * Erosion;
+                int biome = (int)GetBiome(Height, Erosion, Humidity, Temperature);
+                Tile currentTile;
+                if (biome == 9)
+                {
+                    currentTile = realTempWaterTile;
+                }
+                else if (biome != 1)
+                {
+                    currentTile = tempwaterTile;
+                }
+                else
+                {
+                    currentTile = temptile;
+                }
+                map.SetTile(position, currentTile);
                 map.SetTileFlags(position, TileFlags.None);
-                float tempColor = TileInformation(x, y);
-                if (tempColor <= 0.2)
-                {
-                    map.SetColor(position, Color.black);
-                }
-                else if (tempColor <= 0.4)
-                {
-                    map.SetColor(position, Color.blue);
-                }
-                else if (tempColor <= 0.6)
-                {
-                    map.SetColor(position, Color.yellow);
-                }
-                else if (tempColor <= 0.8)
-                {
-                    map.SetColor(position, Color.red);
-                }
                 yield return null;
 
             }
@@ -265,34 +266,15 @@ public class worldGeneration : MonoBehaviour
 
 
     //----
-    public float TileInformation(float x, float y)
+    public (float, float, float, float) TileInformation(float x, float y)
     {
 
         float Height = PerlinNoise(x, y, Octave, Amplitudechangr, Frequency, Frequencychangi, Amplitude);
         float Erosion = PerlinNoise(x, y, eOctave, eAmplitudechangr, eFrequency, eFrequencychangi, eAmplitude);
         float Temperature = PerlinNoise(x, y, tOctave, tAmplitudechangr, tFrequency, tFrequencychangi, tAmplitude);
         float Humidity = PerlinNoise(x, y, hOctave, hAmplitudechangr, hFrequency, hFrequencychangi, hAmplitude);
-        if (tempenum == tempEnum.Height)
-        {
-            print("1");
-            return Height;
-        }
-        else if (tempenum == tempEnum.Erosion)
-        {
-            print("2");
-            return Erosion;
-        }
-        else if (tempenum == tempEnum.Humidity)
-        {
-            print("3");
-            return Humidity;
-        }
-        else if (tempenum == tempEnum.Temperature)
-        {
-            print("4");
-            return Temperature;
-        }
-        return 0;
+        
+        return (Height, Erosion, Temperature, Humidity);
     }
     public float PerlinNoise(float x, float y, int Octaves, int amplitudeChange, float Frequency, float Frequencychangr, int amplitude = 1)
     {
@@ -310,11 +292,11 @@ public class worldGeneration : MonoBehaviour
         Noise /= maxvalue;
         return Noise;
     }
-    private void GetBiome(float Height, float Erosion, float Humidity, float Temperature)
+    private Biome GetBiome(float Height, float Erosion, float Humidity, float Temperature)
     {
         float combinedHeight = Height * Erosion;
         int HeightType;
-        int biome;
+        int? biome = null;
         if (combinedHeight > 0.8)
         {
             HeightType = 3;
@@ -330,13 +312,13 @@ public class worldGeneration : MonoBehaviour
 
         if (HeightType == 2)
         {
-            if (Humidity > 6)
+            if (Humidity > 0.6)
             {
-                if (Temperature < 3)
+                if (Temperature < 0.3)
                 {
                     biome = (int)Biome.SnowyFields;
                 }
-                else if (Temperature > 8)
+                else if (Temperature > 0.8)
                 {
                     biome = (int)Biome.Swamp;
                 }
@@ -345,20 +327,20 @@ public class worldGeneration : MonoBehaviour
                     biome = (int)Biome.Fields;
                 }
             }
-            if (Humidity < 6)
+            if (Humidity < 0.6)
             {
 
             }
         }
         else if (HeightType == 1)
         {
-            if (Humidity > 5)
+            if (Humidity > 0.5)
             {
                 biome = (int)Biome.Ocean;
             }
             else
             {
-                if (Temperature > 5)
+                if (Temperature > 0.5)
                 {
                     //Choose random
                     biome = (int)Biome.Desert;
@@ -369,9 +351,9 @@ public class worldGeneration : MonoBehaviour
         }
         else if (HeightType == 3)
         {
-            if (Humidity < 4)
+            if (Humidity < 0.4)
             {
-                if (Temperature > 3)
+                if (Temperature > 0.3)
                 {
                     biome = (int)Biome.Chaparral;
                 }
@@ -381,13 +363,13 @@ public class worldGeneration : MonoBehaviour
                 }
 
             }
-            else if (Humidity > 8)
+            else if (Humidity > 0.8)
             {
-                if (Temperature > 2)
+                if (Temperature > 0.2)
                 {
 
                 }
-                else if (Temperature > 7)
+                else if (Temperature > 0.7)
                 {
 
                 }
@@ -397,6 +379,10 @@ public class worldGeneration : MonoBehaviour
                 }
             }
         }
+        biome ??= (int)Biome.Fields;
+        //det här är den mest crazy operatorn jag sätt 
+        //??= if null
+        return (Biome)biome;
 
     }
     public void ReplaceTile()

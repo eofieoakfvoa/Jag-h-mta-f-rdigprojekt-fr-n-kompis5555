@@ -40,6 +40,8 @@ public class BiomeGeneration : MonoBehaviour
     Tile TempTundraTile;
     [SerializeField]
     Tile TempMountainsTile;
+    [SerializeField]
+    Tile TempTaigaTile;
     #endregion
     public Tile GetTile(float Height, float Erosion, float Humidity, float Temperature)
     {

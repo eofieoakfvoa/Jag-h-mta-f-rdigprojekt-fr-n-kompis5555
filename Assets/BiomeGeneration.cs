@@ -50,6 +50,14 @@ public class BiomeGeneration : MonoBehaviour
         {
             return TempWaterTile;
         }
+        else if (biomeInformation == Biome.Desert)
+        {
+            return TempDesertTile;
+        }
+        else if (biomeInformation == Biome.Tundra || biomeInformation == Biome.SnowyFields)
+        {
+            return TempSnowTile;
+        }
         else if (biomeInformation != Biome.Fields)
         {
             return TempDesertTile;
@@ -111,8 +119,8 @@ public class BiomeGeneration : MonoBehaviour
                 {
                     //Choose random
                     biome = (int)Biome.Desert;
-                    biome = (int)Biome.Savannah;
-                    biome = (int)Biome.DrySteppe;
+                    //  biome = (int)Biome.Savannah;
+                    //biome = (int)Biome.DrySteppe;
                 }
             }
         }

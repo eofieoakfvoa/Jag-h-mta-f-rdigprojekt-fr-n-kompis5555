@@ -8,6 +8,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Threading.Tasks;
 
 public class worldGeneration : MonoBehaviour
 {
@@ -167,8 +168,7 @@ public class worldGeneration : MonoBehaviour
     }
     public void GetSeed()
     {
-        //seed = UnityEngine.Random.Range(0, 100);
-        seed = 800;
+        seed = UnityEngine.Random.Range(0, 1000);
     }
 
 
@@ -238,14 +238,21 @@ public class worldGeneration : MonoBehaviour
         {
             for (int y = (int)pos.y; y <= pos.y + chunksize; y++)
             {
+                Task task = Task.Run(() => 
+                {
+                    Vector3Int position = new(x, y, 0);
+                    (float Height, float Erosion, float Temperature, float Humidity) = TileInformation(x, y);
+                    Tile currentTile = BiomeGenerator.GetTile(Height, Erosion, Humidity, Temperature);
+                    
+                    UnityEditor.EditorApplication.delayCall += () => 
+                    {
+                        map.SetTile(position, currentTile);
+                        map.SetTileFlags(position, TileFlags.None);
 
-                Vector3Int position = new(x, y, 0);
-                //Tile getTile = PerlinNoise(x,y, Octave, Amplitudechangr, Frequencychangr, Amplitude, Frequency);
-                //map.SetTile(position, getTile);
-                (float Height, float Erosion, float Temperature, float Humidity) = TileInformation(x, y);
-                Tile currentTile = BiomeGenerator.GetTile(Height, Erosion, Humidity, Temperature);
-                map.SetTile(position, currentTile);
-                map.SetTileFlags(position, TileFlags.None);
+                    };
+
+
+                });
                 yield return null;
 
             }
